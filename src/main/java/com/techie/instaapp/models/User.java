@@ -9,6 +9,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.Email;
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -28,5 +29,8 @@ public class User {
     @Id
     private String bvn;
     private String accountNumber;
+    private BigDecimal amount;
+
+    //todo user has an Account.
 
 }

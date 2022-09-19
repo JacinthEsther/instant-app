@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.math.BigDecimal;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -42,7 +44,11 @@ class UserServiceImplTest {
 
     @Test
     void depositCanBeMadeByVerifiedCustomer(){
+        UserRequest request = UserRequest.builder()
+                .BVN("12345678901").accountType("Savings").email("agbonirojacinta@gmail.com").build();
+        UserResponse response= userService.createInstantAccount(request);
 
+        userService.depositTransaction(response.getAccountNumber(), BigDecimal.valueOf(12000));
     }
 
 }

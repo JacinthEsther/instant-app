@@ -13,6 +13,7 @@ import com.techie.instaapp.repositories.UserRepo;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -63,8 +64,16 @@ public class UserServiceImpl implements UserService{
              userResponse.setAccountType(savedUser.getAccountType());
             return userResponse;
          }
-         else throw new InstaAppException("invalid bvn");
+         else throw new InstaAppException("Invalid BVN Details");
 
+    }
+
+    @Override
+    public void depositTransaction(String accountNumber, BigDecimal amount) {
+        User user =userRepo.findByAccountNumber(accountNumber).orElseThrow(()->new InstaAppException("User not found"));
+        if(amount.doubleValue()>0.00){
+
+        }
     }
 
     private BvnResponse getBvnResponse(BvnResponse response, BvnDataResponse dataResponse) {
