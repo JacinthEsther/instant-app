@@ -96,7 +96,7 @@ class UserServiceImplTest {
 
         BankTransfer transfer = new BankTransfer();
         transfer.setBankName("GTb");
-        transfer.setAmount(14000);
+        transfer.setTransferAmount(14000);
 
         transfer.setAccountNumber(receiver.getAccountNumber());
 

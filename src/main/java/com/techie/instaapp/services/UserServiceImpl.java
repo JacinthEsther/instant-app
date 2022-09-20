@@ -135,20 +135,21 @@ public class UserServiceImpl implements UserService{
        Account senderAccount = accountRepo.findByAccountNumber(sender.getUserAccounts().get(j)
                .getAccountNumber()).orElseThrow();
 
-                if (receiver.getUserAccounts().get(j).getAccountNumber().equals(receiverAccount.getAccountNumber())) {
+                if (receiver.getUserAccounts().get(j).getAccountNumber()
+                        .equals(receiverAccount.getAccountNumber())) {
 
-                        if(transfer.getAmount() > 0 && sender.getUserAccounts().
-                                get(j).getAccountBalance().doubleValue() > transfer.getAmount()){
+                        if(transfer.getTransferAmount() > 0 && sender.getUserAccounts().
+                                get(j).getAccountBalance().doubleValue() > transfer.getTransferAmount()){
 
 
                             receiver.getUserAccounts().get(j).setAccountBalance
                                     (receiver.getUserAccounts().get(j).getAccountBalance()
-                                            .add(BigDecimal.valueOf( transfer.getAmount())));
+                                            .add(BigDecimal.valueOf( transfer.getTransferAmount())));
                             receiverAccount.setAccountBalance(receiver.getUserAccounts().get(j).getAccountBalance());
 
 
                             BigDecimal value = sender.getUserAccounts().get(j).getAccountBalance()
-                                    .subtract(BigDecimal.valueOf(transfer.getAmount()));
+                                    .subtract(BigDecimal.valueOf(transfer.getTransferAmount()));
                             sender.getUserAccounts().get(j).setAccountBalance(value);
 
                             senderAccount.setAccountBalance(value);
@@ -164,6 +165,8 @@ public class UserServiceImpl implements UserService{
                             User savedReceiver = userRepo.save(receiver);
                             receiverResponse.setAccountBalance(savedReceiver.getUserAccounts()
                                     .get(j).getAccountBalance().doubleValue());
+
+                            break;
                         }
                 else throw new InstaAppException("account balance exceeds withdrawal");
                 }

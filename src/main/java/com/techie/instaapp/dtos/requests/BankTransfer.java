@@ -12,5 +12,5 @@ public class BankTransfer {
 
     private String accountNumber;
     private String bankName;
-    private double amount;
+    private double transferAmount;
 }
