@@ -15,10 +15,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -142,27 +139,28 @@ public class UserServiceImpl implements UserService{
 
        List<User> users =userRepo.findAll();
 
-        for (User receiver : users) {
-            for (int j = 0; j < receiver.getUserAccounts().size(); j++) {
+        for (int i =0; i < users.size(); i++) {
+            for (int j = 0; j < users.get(i).getUserAccounts().size(); j++) {
        Account senderAccount = accountRepo.findByAccountNumber(sender.getUserAccounts().get(j)
                .getAccountNumber()).orElseThrow(()-> new InstaAppException("account number not found"));
 
-                if (receiver.getUserAccounts().get(j).getAccountNumber()
+                if (users.get(i).getUserAccounts().get(j).getAccountNumber()
                         .equals(receiverAccount.getAccountNumber())) {
-
-                        if(transfer.getTransferAmount() > 0 && sender.getUserAccounts().
-                                get(j).getAccountBalance().doubleValue() > transfer.getTransferAmount()){
-
-
-                            receiver.getUserAccounts().get(j).setAccountBalance
-                                    (receiver.getUserAccounts().get(j).getAccountBalance()
-                                            .add(BigDecimal.valueOf( transfer.getTransferAmount())));
-                            receiverAccount.setAccountBalance(receiver.getUserAccounts().get(j).getAccountBalance());
+                    if (!Objects.equals(sender.getUserAccounts().get(i).getAccountNumber(),
+                            users.get(i).getUserAccounts().get(j).getAccountNumber())) {
+                        if (transfer.getTransferAmount() > 0 && sender.getUserAccounts().
+                                get(i).getAccountBalance().doubleValue() > transfer.getTransferAmount()) {
 
 
-                            BigDecimal value = sender.getUserAccounts().get(j).getAccountBalance()
+                            users.get(i).getUserAccounts().get(j).setAccountBalance
+                                    (users.get(i).getUserAccounts().get(j).getAccountBalance()
+                                            .add(BigDecimal.valueOf(transfer.getTransferAmount())));
+                            receiverAccount.setAccountBalance(users.get(i).getUserAccounts().get(j).getAccountBalance());
+
+
+                            BigDecimal value = sender.getUserAccounts().get(i).getAccountBalance()
                                     .subtract(BigDecimal.valueOf(transfer.getTransferAmount()));
-                            sender.getUserAccounts().get(j).setAccountBalance(value);
+                            sender.getUserAccounts().get(i).setAccountBalance(value);
 
                             senderAccount.setAccountBalance(value);
 
@@ -170,17 +168,18 @@ public class UserServiceImpl implements UserService{
                             accountRepo.save(receiverAccount);
                             accountRepo.save(senderAccount);
 
-                            User savedSender =userRepo.save(sender);
+                            User savedSender = userRepo.save(sender);
                             senderResponse.setAccountBalance(savedSender.getUserAccounts()
-                                    .get(j).getAccountBalance().doubleValue());
+                                    .get(i).getAccountBalance().doubleValue());
 
-                            User savedReceiver = userRepo.save(receiver);
+                            User savedReceiver = userRepo.save(users.get(i));
                             receiverResponse.setAccountBalance(savedReceiver.getUserAccounts()
                                     .get(j).getAccountBalance().doubleValue());
 
                             break;
                         }
                 else throw new InstaAppException("account balance exceeds withdrawal");
+                    }
                 }
 
             }
