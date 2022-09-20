@@ -45,8 +45,11 @@ public class UserServiceImpl implements UserService{
         Account savedAccount = accountRepo.save(account);
 
         if(databaseUser.isPresent()){
-            databaseUser.get().getUserAccounts().add(account);
-            userRepo.save(databaseUser.get());
+            databaseUser.get().getUserAccounts().add(savedAccount);
+            User savedUser = userRepo.save(databaseUser.get());
+            userResponse.setAccountNumber(savedAccount.getAccountNumber());
+            userResponse.setAccountType(savedAccount.getAccountType());
+            userResponse.setUserId(savedUser.getUserId());
 
         }
         else {
