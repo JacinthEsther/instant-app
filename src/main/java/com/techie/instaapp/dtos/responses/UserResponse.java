@@ -7,4 +7,5 @@ public class UserResponse {
 
     private String accountNumber;
     private String accountType;
+    private String userId;
 }

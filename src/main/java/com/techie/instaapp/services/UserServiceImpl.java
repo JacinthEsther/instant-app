@@ -1,19 +1,23 @@
 package com.techie.instaapp.services;
 
+import com.techie.instaapp.dtos.requests.BankDeposit;
+import com.techie.instaapp.dtos.requests.BankTransfer;
 import com.techie.instaapp.dtos.requests.UserRequest;
 import com.techie.instaapp.dtos.responses.BvnDataResponse;
 import com.techie.instaapp.dtos.responses.BvnResponse;
+import com.techie.instaapp.dtos.responses.DepositResponse;
 import com.techie.instaapp.dtos.responses.UserResponse;
 import com.techie.instaapp.exceptions.InstaAppException;
-import com.techie.instaapp.models.AccountType;
-import com.techie.instaapp.models.BvnData;
-import com.techie.instaapp.models.User;
-import com.techie.instaapp.models.Verification;
+import com.techie.instaapp.models.*;
+import com.techie.instaapp.repositories.AccountRepo;
 import com.techie.instaapp.repositories.UserRepo;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,6 +29,7 @@ public class UserServiceImpl implements UserService{
 
     private final BvnDataImpl bvnData;
     private final UserRepo userRepo;
+    private final AccountRepo accountRepo;
 
 
     @Override
@@ -41,17 +46,26 @@ public class UserServiceImpl implements UserService{
        user.setFirstName(data.getFirstName());
        user.setLastName(data.getLastName());
 
-       user.setAccountType(AccountType.valueOf(request.getAccountType().toUpperCase()).name());
+        Account account = new Account();
+
+        account.setAccountNumber(generateAccountNumber());
+        account.setAccountType(AccountType.valueOf(request.getAccountType().toUpperCase()).name());
+        account.setAccountBalance(BigDecimal.valueOf(0.00));
+        Account savedAccount = accountRepo.save(account);
+
+
        boolean isValid = isValidEmail(request.getEmail());
        if(isValid) {
            user.setEmail(request.getEmail());
+           user.getUserAccounts().add(savedAccount);
        }
        else throw new InstaAppException("Enter a valid email");
-        user.setAccountNumber(generateAccountNumber());
+
 
        User savedUser = userRepo.save(user);
 
        BvnDataResponse dataResponse = new BvnDataResponse();
+
        dataResponse.setDateOfBirth(data.getDateOfBirth());
        dataResponse.setFirstName(savedUser.getFirstName());
        dataResponse.setLastName(savedUser.getLastName());
@@ -60,8 +74,9 @@ public class UserServiceImpl implements UserService{
         BvnResponse bvnResponse= getBvnResponse(response, dataResponse);
 
          if(bvnResponse.isStatus() && bvnResponse.getVerification().getStatus().equals("verified")){
-             userResponse.setAccountNumber(savedUser.getAccountNumber());
-             userResponse.setAccountType(savedUser.getAccountType());
+             userResponse.setAccountNumber(savedAccount.getAccountNumber());
+             userResponse.setAccountType(savedAccount.getAccountType());
+             userResponse.setUserId(savedUser.getUserId());
             return userResponse;
          }
          else throw new InstaAppException("Invalid BVN Details");
@@ -69,11 +84,97 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public void depositTransaction(String accountNumber, BigDecimal amount) {
-        User user =userRepo.findByAccountNumber(accountNumber).orElseThrow(()->new InstaAppException("User not found"));
-        if(amount.doubleValue()>0.00){
+    public DepositResponse depositTransactionToOwnersAccount(BankDeposit request, String userId) {
+        DepositResponse depositResponse = new DepositResponse();
+        Account userAccount =accountRepo.findByAccountNumber(request.getAccountNumber()).orElseThrow(
+                ()->new InstaAppException("Account not found"));
 
+        Optional<User> user = userRepo.findById(userId);
+        if(user.isEmpty()) {
+            throw new InstaAppException("Invalid details");
         }
+
+            for (int i = 0; i < user.get().getUserAccounts().size(); i++) {
+                if (user.get().getUserAccounts().get(i)
+                        .getAccountNumber().equals(userAccount.getAccountNumber())) {
+
+                    if (request.getAmount() > 0.00) {
+                        userAccount.setAccountBalance(BigDecimal.valueOf(request.getAmount()));
+                        Account savedAccount = accountRepo.save(userAccount);
+
+                        user.get().getUserAccounts().get(i).setAccountBalance(savedAccount.getAccountBalance());
+                       userRepo.save(user.get());
+
+
+                        depositResponse.setAccountBalance(savedAccount.getAccountBalance().doubleValue());
+
+
+                    }
+                    else throw new InstaAppException("Please Deposit more than 0.00");
+                }
+            }
+                        return depositResponse;
+
+
+    }
+
+    @Override
+    public List<DepositResponse> makeTransfer(String userId, BankTransfer transfer) {
+        DepositResponse senderResponse = new DepositResponse();
+        DepositResponse receiverResponse = new DepositResponse();
+
+        User sender = userRepo.findById(userId).orElseThrow();
+
+       Account receiverAccount = accountRepo.findByAccountNumber(transfer.getAccountNumber()).orElseThrow();
+
+
+       List<User> users =userRepo.findAll();
+
+        for (User receiver : users) {
+            for (int j = 0; j < receiver.getUserAccounts().size(); j++) {
+       Account senderAccount = accountRepo.findByAccountNumber(sender.getUserAccounts().get(j)
+               .getAccountNumber()).orElseThrow();
+                System.out.println("......."+receiver.getUserAccounts());
+                System.out.println("........."+ receiver.getUserAccounts().get(j).getAccountNumber());
+                if (receiver.getUserAccounts().get(j).getAccountNumber().equals(receiverAccount.getAccountNumber())) {
+
+                        if(transfer.getAmount() > 0 && sender.getUserAccounts().
+                                get(j).getAccountBalance().doubleValue() > transfer.getAmount()){
+
+
+                            receiver.getUserAccounts().get(j).setAccountBalance
+                                    (receiver.getUserAccounts().get(j).getAccountBalance()
+                                            .add(BigDecimal.valueOf( transfer.getAmount())));
+                            receiverAccount.setAccountBalance(receiver.getUserAccounts().get(j).getAccountBalance());
+
+
+                            BigDecimal value = sender.getUserAccounts().get(j).getAccountBalance()
+                                    .subtract(BigDecimal.valueOf(transfer.getAmount()));
+                            sender.getUserAccounts().get(j).setAccountBalance(value);
+
+                            senderAccount.setAccountBalance(value);
+
+
+                            accountRepo.save(receiverAccount);
+                            accountRepo.save(senderAccount);
+
+                            User savedSender =userRepo.save(sender);
+                            senderResponse.setAccountBalance(savedSender.getUserAccounts()
+                                    .get(j).getAccountBalance().doubleValue());
+
+                            User savedReceiver = userRepo.save(receiver);
+                            receiverResponse.setAccountBalance(savedReceiver.getUserAccounts()
+                                    .get(j).getAccountBalance().doubleValue());
+                        }
+                else throw new InstaAppException("account balance exceeds withdrawal");
+                }
+
+            }
+        }
+        List <DepositResponse> depositResponses = new ArrayList<>();
+        depositResponses.add(senderResponse);
+        depositResponses.add(receiverResponse);
+        return depositResponses;
     }
 
     private BvnResponse getBvnResponse(BvnResponse response, BvnDataResponse dataResponse) {
