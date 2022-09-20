@@ -134,8 +134,7 @@ public class UserServiceImpl implements UserService{
             for (int j = 0; j < receiver.getUserAccounts().size(); j++) {
        Account senderAccount = accountRepo.findByAccountNumber(sender.getUserAccounts().get(j)
                .getAccountNumber()).orElseThrow();
-                System.out.println("......."+receiver.getUserAccounts());
-                System.out.println("........."+ receiver.getUserAccounts().get(j).getAccountNumber());
+
                 if (receiver.getUserAccounts().get(j).getAccountNumber().equals(receiverAccount.getAccountNumber())) {
 
                         if(transfer.getAmount() > 0 && sender.getUserAccounts().
