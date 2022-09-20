@@ -99,7 +99,8 @@ public class UserServiceImpl implements UserService{
                         .getAccountNumber().equals(userAccount.getAccountNumber())) {
 
                     if (request.getAmount() > 0.00) {
-                        userAccount.setAccountBalance(BigDecimal.valueOf(request.getAmount()));
+                        userAccount.setAccountBalance(BigDecimal.valueOf(request.getAmount())
+                                .add(userAccount.getAccountBalance()));
                         Account savedAccount = accountRepo.save(userAccount);
 
                         user.get().getUserAccounts().get(i).setAccountBalance(savedAccount.getAccountBalance());
