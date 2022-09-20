@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService{
         UserResponse userResponse = new UserResponse();
 
 
-       BvnData data= verifyBvn(request.getBVN());
+       BvnData data= verifyBvn(request.getBvn());
        user.setBvn(data.getBvn());
        user.setPhoneNumber(data.getPhoneNumber());
        user.setFirstName(data.getFirstName());

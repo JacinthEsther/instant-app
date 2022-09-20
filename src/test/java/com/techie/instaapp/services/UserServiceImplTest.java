@@ -30,7 +30,7 @@ class UserServiceImplTest {
 
     private UserResponse createAccount() {
         UserRequest request = UserRequest.builder()
-                .BVN("12345678901").accountType("Savings").email("agbonirojacinta@gmail.com").build();
+                .bvn("12345678901").accountType("Savings").email("agbonirojacinta@gmail.com").build();
         return userService.createInstantAccount(request);
     }
 
@@ -38,7 +38,7 @@ class UserServiceImplTest {
     @Test
     void bvnOfLengthLessThan11ThrowsExceptionTest(){
         UserRequest request = UserRequest.builder()
-                .BVN("123456").build();
+                .bvn("123456").build();
         assertThrows(InstaAppException.class,()->userService.createInstantAccount(request));
     }
 
@@ -46,7 +46,7 @@ class UserServiceImplTest {
    @Test
     void bvnOfLengthGreaterThan11ThrowsExceptionTest(){
         UserRequest request = UserRequest.builder()
-                .BVN("123456789012").build();
+                .bvn("123456789012").build();
         assertThrows(InstaAppException.class,()->userService.createInstantAccount(request));
     }
 
@@ -90,7 +90,7 @@ class UserServiceImplTest {
                 (bankDeposit,sender.getUserId());
 
         UserRequest request = UserRequest.builder()
-                .BVN("12345678321").accountType("Current").email("agbonirojacinta@gmail.com").build();
+                .bvn("12345678321").accountType("Current").email("agbonirojacinta@gmail.com").build();
 
         UserResponse receiver = userService.createInstantAccount(request);
 
