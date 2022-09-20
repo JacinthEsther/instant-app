@@ -145,7 +145,7 @@ public class UserServiceImpl implements UserService{
         for (User receiver : users) {
             for (int j = 0; j < receiver.getUserAccounts().size(); j++) {
        Account senderAccount = accountRepo.findByAccountNumber(sender.getUserAccounts().get(j)
-               .getAccountNumber()).orElseThrow();
+               .getAccountNumber()).orElseThrow(()-> new InstaAppException("account number not found"));
 
                 if (receiver.getUserAccounts().get(j).getAccountNumber()
                         .equals(receiverAccount.getAccountNumber())) {
