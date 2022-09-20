@@ -34,18 +34,9 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public UserResponse createInstantAccount(UserRequest request) {
-        User user = new User();
+        Optional <User> databaseUser =userRepo.findByBvn(request.getBvn());
 
-        BvnResponse response = new BvnResponse();
-        UserResponse userResponse = new UserResponse();
-
-
-       BvnData data= verifyBvn(request.getBvn());
-       user.setBvn(data.getBvn());
-       user.setPhoneNumber(data.getPhoneNumber());
-       user.setFirstName(data.getFirstName());
-       user.setLastName(data.getLastName());
-
+            UserResponse userResponse = new UserResponse();
         Account account = new Account();
 
         account.setAccountNumber(generateAccountNumber());
@@ -53,33 +44,51 @@ public class UserServiceImpl implements UserService{
         account.setAccountBalance(BigDecimal.valueOf(0.00));
         Account savedAccount = accountRepo.save(account);
 
+        if(databaseUser.isPresent()){
+            databaseUser.get().getUserAccounts().add(account);
+            userRepo.save(databaseUser.get());
 
-       boolean isValid = isValidEmail(request.getEmail());
-       if(isValid) {
-           user.setEmail(request.getEmail());
-           user.getUserAccounts().add(savedAccount);
-       }
-       else throw new InstaAppException("Enter a valid email");
+        }
+        else {
+
+            User user = new User();
+
+            BvnResponse response = new BvnResponse();
 
 
-       User savedUser = userRepo.save(user);
+            BvnData data = verifyBvn(request.getBvn());
+            user.setBvn(data.getBvn());
+            user.setPhoneNumber(data.getPhoneNumber());
+            user.setFirstName(data.getFirstName());
+            user.setLastName(data.getLastName());
 
-       BvnDataResponse dataResponse = new BvnDataResponse();
 
-       dataResponse.setDateOfBirth(data.getDateOfBirth());
-       dataResponse.setFirstName(savedUser.getFirstName());
-       dataResponse.setLastName(savedUser.getLastName());
-       dataResponse.setPhoneNumber(savedUser.getPhoneNumber());
+            boolean isValid = isValidEmail(request.getEmail());
+            if (isValid) {
+                user.setEmail(request.getEmail());
+                user.getUserAccounts().add(savedAccount);
+            } else throw new InstaAppException("Enter a valid email");
 
-        BvnResponse bvnResponse= getBvnResponse(response, dataResponse);
 
-         if(bvnResponse.isStatus() && bvnResponse.getVerification().getStatus().equals("verified")){
-             userResponse.setAccountNumber(savedAccount.getAccountNumber());
-             userResponse.setAccountType(savedAccount.getAccountType());
-             userResponse.setUserId(savedUser.getUserId());
-            return userResponse;
-         }
-         else throw new InstaAppException("Invalid BVN Details");
+            User savedUser = userRepo.save(user);
+
+            BvnDataResponse dataResponse = new BvnDataResponse();
+
+            dataResponse.setDateOfBirth(data.getDateOfBirth());
+            dataResponse.setFirstName(savedUser.getFirstName());
+            dataResponse.setLastName(savedUser.getLastName());
+            dataResponse.setPhoneNumber(savedUser.getPhoneNumber());
+
+            BvnResponse bvnResponse = getBvnResponse(response, dataResponse);
+
+            if (bvnResponse.isStatus() && bvnResponse.getVerification().getStatus().equals("verified")) {
+                userResponse.setAccountNumber(savedAccount.getAccountNumber());
+                userResponse.setAccountType(savedAccount.getAccountType());
+                userResponse.setUserId(savedUser.getUserId());
+            }
+            else throw new InstaAppException("Invalid BVN Details");
+        }
+                return userResponse;
 
     }
 
