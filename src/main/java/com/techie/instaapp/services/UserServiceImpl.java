@@ -123,8 +123,7 @@ public class UserServiceImpl implements UserService{
     public List<DepositResponse> makeTransfer(String userId, BankTransfer transfer) {
         DepositResponse senderResponse = new DepositResponse();
         DepositResponse receiverResponse = new DepositResponse();
-
-        User sender = userRepo.findById(userId).orElseThrow();
+        User sender = userRepo.findById(userId).orElseThrow(()->new InstaAppException("user not found"));
 
        Account receiverAccount = accountRepo.findByAccountNumber(transfer.getAccountNumber()).orElseThrow();
 
