@@ -95,10 +95,10 @@ class UserServiceImplTest {
         UserResponse receiver = userService.createInstantAccount(request);
 
         BankTransfer transfer = new BankTransfer();
-        transfer.setBankName("GTb");
+        transfer.setSenderAccountNumber("GTb");
         transfer.setTransferAmount(14000);
 
-        transfer.setAccountNumber(receiver.getAccountNumber());
+        transfer.setReceiverAccountNumber(receiver.getAccountNumber());
 
        List <DepositResponse> responses = userService.makeTransfer(sender.getUserId(),transfer);
 

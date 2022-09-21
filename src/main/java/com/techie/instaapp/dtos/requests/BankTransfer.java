@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class BankTransfer {
 
-    private String accountNumber;
-    private String bankName;
+    private String receiverAccountNumber;
+    private String senderAccountNumber;
     private double transferAmount;
 }

@@ -132,58 +132,70 @@ public class UserServiceImpl implements UserService{
     public List<DepositResponse> makeTransfer(String userId, BankTransfer transfer) {
         DepositResponse senderResponse = new DepositResponse();
         DepositResponse receiverResponse = new DepositResponse();
+
         User sender = userRepo.findById(userId).orElseThrow(()->new InstaAppException("user not found"));
 
-       Account receiverAccount = accountRepo.findByAccountNumber(transfer.getAccountNumber()).orElseThrow();
+       Account receiverAccount = accountRepo.findByAccountNumber(transfer.getReceiverAccountNumber()).orElseThrow(
+               ()->new InstaAppException("account not found"));
 
 
        List<User> users =userRepo.findAll();
-
-        for (int i =0; i < users.size(); i++) {
+        for (int i = 0; i < users.size(); i++) {
             for (int j = 0; j < users.get(i).getUserAccounts().size(); j++) {
-       Account senderAccount = accountRepo.findByAccountNumber(sender.getUserAccounts().get(j)
-               .getAccountNumber()).orElseThrow(()-> new InstaAppException("account number not found"));
 
                 if (users.get(i).getUserAccounts().get(j).getAccountNumber()
-                        .equals(receiverAccount.getAccountNumber())) {
-                    if (!Objects.equals(sender.getUserAccounts().get(i).getAccountNumber(),
-                            users.get(i).getUserAccounts().get(j).getAccountNumber())) {
-                        if (transfer.getTransferAmount() > 0 && sender.getUserAccounts().
-                                get(i).getAccountBalance().doubleValue() > transfer.getTransferAmount()) {
+                        .equals(receiverAccount.getAccountNumber())){
+                    for (int k = 0; k < sender.getUserAccounts().size(); k++) {
+                        if(sender.getUserAccounts().get(k).getAccountNumber()
+                                .equals(transfer.getSenderAccountNumber())){
+                            if(sender.getUserAccounts().get(k).getAccountBalance().doubleValue()
+                                    >= transfer.getTransferAmount() && transfer.getTransferAmount() > 0.00){
+
+                               Account foundSenderAccount= accountRepo.findByAccountNumber(
+                                       transfer.getSenderAccountNumber()).orElseThrow(
+                                        ()-> new InstaAppException("account not found")
+                                );
+
+                                receiverAccount.setAccountBalance(
+                                        receiverAccount.getAccountBalance().add(BigDecimal.valueOf(
+                                                transfer.getTransferAmount()
+                                        )));
+
+                                Account account=accountRepo.save(receiverAccount);
+                               users.get(i).getUserAccounts().get(j).setAccountBalance(
+                                       account.getAccountBalance()
+                               );
 
 
-                            users.get(i).getUserAccounts().get(j).setAccountBalance
-                                    (users.get(i).getUserAccounts().get(j).getAccountBalance()
-                                            .add(BigDecimal.valueOf(transfer.getTransferAmount())));
-                            receiverAccount.setAccountBalance(users.get(i).getUserAccounts().get(j).getAccountBalance());
+                                sender.getUserAccounts().get(k).setAccountBalance(
+                                        sender.getUserAccounts().get(k).getAccountBalance()
+                                                .subtract(BigDecimal.valueOf(transfer.getTransferAmount())));
 
 
-                            BigDecimal value = sender.getUserAccounts().get(i).getAccountBalance()
-                                    .subtract(BigDecimal.valueOf(transfer.getTransferAmount()));
-                            sender.getUserAccounts().get(i).setAccountBalance(value);
-
-                            senderAccount.setAccountBalance(value);
+                               userRepo.save(users.get(i));
+                                User senderNewBalance=userRepo.save(sender);
 
 
-                            accountRepo.save(receiverAccount);
-                            accountRepo.save(senderAccount);
 
-                            User savedSender = userRepo.save(sender);
-                            senderResponse.setAccountBalance(savedSender.getUserAccounts()
-                                    .get(i).getAccountBalance().doubleValue());
 
-                            User savedReceiver = userRepo.save(users.get(i));
-                            receiverResponse.setAccountBalance(savedReceiver.getUserAccounts()
-                                    .get(j).getAccountBalance().doubleValue());
+                                foundSenderAccount.setAccountBalance(
+                                        senderNewBalance.getUserAccounts().get(k).getAccountBalance()
+                                );
 
-                            break;
+                                Account account2=accountRepo.save(foundSenderAccount);
+
+                                senderResponse.setAccountBalance(account.getAccountBalance().doubleValue());
+                                receiverResponse.setAccountBalance(account2.getAccountBalance().doubleValue());
+
+                            }
+                            else throw new InstaAppException("account not found");
                         }
-                else throw new InstaAppException("account balance exceeds withdrawal");
                     }
                 }
 
             }
         }
+
         List <DepositResponse> depositResponses = new ArrayList<>();
         depositResponses.add(senderResponse);
         depositResponses.add(receiverResponse);
