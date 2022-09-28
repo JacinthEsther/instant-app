@@ -14,5 +14,5 @@ public interface UserService {
 
     DepositResponse depositTransactionToOwnersAccount(BankDeposit request, String userId);
 
-    List<DepositResponse> makeTransfer(String userId, BankTransfer transfer);
+    List<DepositResponse> makeTransfer(String senderId, BankTransfer transfer);
 }

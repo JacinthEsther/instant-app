@@ -6,4 +6,5 @@ import lombok.Data;
 public class BankDeposit {
     private String accountNumber;
     private double amount;
+    private String pin;
 }

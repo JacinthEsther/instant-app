@@ -33,6 +33,7 @@ public class User {
     private String userId;
 
     private String bvn;
+    private String pin;
 
     private List<Account> userAccounts = new ArrayList<>();
 

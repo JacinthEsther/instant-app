@@ -30,7 +30,8 @@ class UserServiceImplTest {
 
     private UserResponse createAccount() {
         UserRequest request = UserRequest.builder()
-                .bvn("12345678901").accountType("Savings").email("agbonirojacinta@gmail.com").build();
+                .bvn("12345678901").accountType("Savings").email("agbonirojacinta@gmail.com")
+                .pin("1234").build();
         return userService.createInstantAccount(request);
     }
 
@@ -57,7 +58,7 @@ class UserServiceImplTest {
         BankDeposit request = new BankDeposit();
         request.setAmount(12000);
         request.setAccountNumber(response.getAccountNumber());
-
+        request.setPin("1234");
 
         DepositResponse depositResponse=  userService.depositTransactionToOwnersAccount
               (request,response.getUserId());
@@ -90,13 +91,15 @@ class UserServiceImplTest {
                 (bankDeposit,sender.getUserId());
 
         UserRequest request = UserRequest.builder()
-                .bvn("12345678321").accountType("Current").email("agbonirojacinta@gmail.com").build();
+                .bvn("12345778321").accountType("Current").pin("1234").email("jacinta@gmail.com").build();
 
         UserResponse receiver = userService.createInstantAccount(request);
 
         BankTransfer transfer = new BankTransfer();
-        transfer.setSenderAccountNumber("GTb");
+        transfer.setSenderAccountNumber(sender.getAccountNumber());
+        transfer.setReceiverAccountNumber(receiver.getAccountNumber());
         transfer.setTransferAmount(14000);
+        transfer.setPin("1234");
 
         transfer.setReceiverAccountNumber(receiver.getAccountNumber());
 

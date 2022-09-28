@@ -13,4 +13,5 @@ public class BankTransfer {
     private String receiverAccountNumber;
     private String senderAccountNumber;
     private double transferAmount;
+    private String pin;
 }
